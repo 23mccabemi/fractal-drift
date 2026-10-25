@@ -105,12 +105,9 @@ The autopilot's speed only changes slightly with the music. Use the touchpad cli
 | Tab | What it is |
 |---|---|
 | **Fractals** | The 29 worlds above - the raymarched fractals |
-| **Tunnel** | An endless weaving bore with ribs and flutes sweeping past. The fastest, most forward-moving tab |
 | **Canyon** | Endless ridged terrain under a sky: an open, exterior world instead of an interior |
-| **Nebula** | A drifting particle field you fly through. The bass swells the flow and the particles ease out of your way. The calm one |
-| **Songform** | The last minute of what is playing, built into a solid: one strand per frequency band running back in time, so the drop you just heard is a cliff behind you |
 
-Tunnel and Canyon are raymarched like the fractals, so everything (autopilot, palettes, colour flow, photo mode) works there too. Nebula and Songform draw points and lines instead, and share the same bloom and tonemapping.
+Canyon is raymarched like the fractals, so everything (autopilot, palettes, colour flow, photo mode) works there too.
 
 ## Performance tips (important on a Surface)
 
@@ -126,7 +123,7 @@ Tunnel and Canyon are raymarched like the fractals, so everything (autopilot, pa
 index.html          UI shell (start screen, HUD, settings, help)
 js/shaders.js       raymarcher, lighting, temporal upsampling, bloom, tonemapping (GLSL)
 js/fractals.js      distance estimators + art direction for each scene (palettes, lights)
-js/tabs.js          the other tabs: tunnel and canyon scenes, nebula and songform definitions
+js/tabs.js          the tab list and the Canyon scenes
 js/renderer.js      WebGL2 passes, dynamic resolution, async GPU probe readback
 js/audio.js         system-audio / mic capture, band analysis, beat detection, demo beat
 js/input.js         DualSense (standard + raw Bluetooth mappings), keyboard, mouse, touch

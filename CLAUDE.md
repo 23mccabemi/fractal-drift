@@ -40,11 +40,10 @@ Launch: `Start Fractal Drift.bat` -> `tools/serve.ps1` (localhost:8765, opens Ed
 
 ## Tabs (js/tabs.js)
 L1/R1 switch tabs, arrows switch scenes inside one. A tab is `{ id, name, kind, scenes }`.
-`kind: 'march'` reuses the whole raymarch pipeline, so Tunnel and Canyon are just new distance
-estimators plus art direction - prefer that for any new world. `nebula` and `songform` take the
-second path (`Renderer.renderGeo`): they draw points/lines additively into the HDR target and then
-share the existing bloom + tonemap, so the post look matches. Geometry scenes have no `p0/rot/
-scaleClamp`, and the flight model gets a synthetic open-space probe for them.
+Two tabs exist: Fractals and Canyon. `kind: 'march'` reuses the whole raymarch pipeline, so Canyon
+is just a new distance estimator plus art direction - do the same for any new world.
+Removed by request (failed prototypes): Tunnel, Nebula and Songform, and the `Renderer.renderGeo`
+points/lines path they used. Don't bring them back.
 
 ## Rendering pipeline (js/renderer.js, js/shaders.js)
 cone pre-pass (1/4 res) -> over-relaxed raymarch (dynamic res) -> temporal upsampling with depth-tested
@@ -77,8 +76,8 @@ useless, because TAA has already cleaned it up.
   connected controller steers the camera and flips scenes, which silently ruins screenshot comparisons
   (it happened: two "identical" captures differed because the pad was nudging the camera).
 - Headless audio needs `--autoplay-policy=no-user-gesture-required`, or the AudioContext stays
-  suspended and every audio-driven thing reads zero. Songform looked broken for an hour because of
-  this - the HUD meters being flat is the tell.
+  suspended and every audio-driven thing reads zero. An audio-driven tab looked broken for an hour
+  because of this - the HUD meters being flat is the tell.
 - Judge a new palette by measuring, not by eye on one screenshot: mean luma of the frame (HUD strips
   excluded) should land between Magenta Foam (~27, a deliberately dark world) and Silver Spires (~94).
   Several new scenes rendered as literally black (mean 0.5) while looking plausible in source.

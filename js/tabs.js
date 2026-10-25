@@ -1,9 +1,8 @@
 // Tabs: separate worlds, switched with L1 / R1 (or , and .). Arrows still move between
 // the scenes inside the current tab, and each tab remembers where you were.
 //
-// A tab is { id, name, kind, scenes, flight }. Everything is drawn by the raymarch
-// pipeline, so a new world is a distance estimator plus art direction. `flight` names the
-// flight model the tab wants (the Canyon flies like a wingsuit, the fractals drift).
+// A tab is { id, name, kind, scenes }. Everything is drawn by the raymarch pipeline,
+// so a new world is a distance estimator plus art direction.
 'use strict';
 (function (FV) {
   const P = (hexes) => hexes.map(FV.hexToRgb);
