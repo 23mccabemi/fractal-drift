@@ -136,3 +136,7 @@ tools/devserver.js  dev server (Node) with a /shot endpoint for capturing compar
 URL options for tinkering: `?scene=3`, `?demo`, `?go` (skip the start screen), `?stats`, `?q=high|ultra`, `?auto=0`, `?free` (spectator camera).
 
 To add a scene, add an entry to `scenes` in `js/fractals.js` (pick a `program`, parameters, palette and lights). For another variation of the foam, `foam(name, cam, opts)` builds one from either the Magenta Foam (dark, emissive rims) or Fractal Light (`bright: true`) treatment, and `node tools/scout-cams.js [count] [seed]` prints fresh viewpoints that are checked against the real distance field for a full, layered frame.
+
+## License
+
+[MIT](LICENSE)
