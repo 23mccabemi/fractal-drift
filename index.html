@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fractal Drift</title>
+<style>
+  :root { --fg: #f2eefa; --dim: rgba(242,238,250,.62); --panel: rgba(12,8,20,.72); --line: rgba(255,255,255,.12); --acc: #b98cff; --acc2: #6ff7d9; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #000; color: var(--fg); overflow: hidden;
+    font: 15px/1.45 "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif; -webkit-user-select: none; user-select: none; }
+  canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; touch-action: none; cursor: grab; }
+  canvas:active { cursor: grabbing; }
+  .hidden { display: none !important; }
+
+  #start { position: fixed; inset: 0; display: grid; place-items: center; z-index: 20;
+    background: radial-gradient(ellipse at 50% 40%, rgba(40,10,70,.55), rgba(0,0,0,.82)); backdrop-filter: blur(3px); }
+  .card { width: min(560px, calc(100vw - 32px)); padding: 28px 28px 22px; border-radius: 18px; background: var(--panel);
+    border: 1px solid var(--line); box-shadow: 0 30px 80px rgba(0,0,0,.6); }
+  h1 { margin: 0 0 2px; font-size: 30px; letter-spacing: .5px; font-weight: 650;
+    background: linear-gradient(90deg, #d8b8ff, #6ff7d9, #ffe27a); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .tag { color: var(--dim); margin: 0 0 18px; }
+  .btn { display: flex; gap: 12px; align-items: center; width: 100%; text-align: left; padding: 13px 16px; margin: 8px 0;
+    border-radius: 12px; border: 1px solid var(--line); background: rgba(255,255,255,.05); color: var(--fg); font: inherit; cursor: pointer; }
+  .btn:hover, .btn:focus-visible { background: rgba(185,140,255,.16); border-color: rgba(185,140,255,.5); outline: none; }
+  .btn b { display: block; font-weight: 600; }
+  .btn small { color: var(--dim); display: block; font-size: 12.5px; }
+  .btn .ico { font-size: 22px; width: 28px; text-align: center; }
+  .btn.primary { background: linear-gradient(90deg, rgba(150,90,255,.35), rgba(80,220,200,.22)); border-color: rgba(185,140,255,.6); }
+  #startErr { display: none; margin-top: 10px; padding: 10px 12px; border-radius: 10px; background: rgba(255,60,90,.15); border: 1px solid rgba(255,80,110,.4); font-size: 13px; }
+  .hint { color: var(--dim); font-size: 12.5px; margin-top: 14px; }
+  .hint kbd, #help kbd { font: 12px ui-monospace, Consolas, monospace; padding: 1px 6px; border-radius: 5px; border: 1px solid var(--line); background: rgba(255,255,255,.06); }
+
+  #loading { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 30; padding: 8px 14px; border-radius: 999px;
+    background: var(--panel); border: 1px solid var(--line); font-size: 13px; color: var(--dim); display: none; }
+
+  #hud { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
+  #titleBox { position: absolute; left: 28px; bottom: 26px; opacity: 0; transform: translateY(8px); transition: opacity .6s, transform .6s; text-shadow: 0 2px 18px rgba(0,0,0,.8); }
+  #titleBox.show { opacity: 1; transform: none; }
+  #title { font-size: 28px; font-weight: 300; letter-spacing: 3px; text-transform: uppercase; }
+  #subtitle { font-size: 12px; color: var(--dim); letter-spacing: 2px; }
+  #topbar { position: absolute; top: 14px; right: 14px; display: flex; gap: 8px; align-items: center; pointer-events: auto; }
+  .pill { padding: 5px 10px; border-radius: 999px; background: rgba(0,0,0,.35); border: 1px solid var(--line); font-size: 12px; color: var(--dim); }
+  .ibtn { width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--line); background: rgba(0,0,0,.35); color: var(--fg); cursor: pointer; font-size: 16px; }
+  #meters { position: absolute; right: 18px; bottom: 22px; display: flex; gap: 4px; align-items: flex-end; height: 34px; opacity: .8; }
+  #meters i { width: 6px; height: 100%; border-radius: 3px; background: linear-gradient(to top, var(--acc), var(--acc2)); transform-origin: bottom; transform: scaleY(.05); }
+  #beatDot { width: 8px; height: 8px; border-radius: 50%; background: #fff; margin-left: 6px; box-shadow: 0 0 12px #fff; opacity: .2; align-self: center; }
+  #stats { white-space: pre; position: absolute; left: 14px; top: 12px; font: 12px ui-monospace, Consolas, monospace; color: var(--dim); text-shadow: 0 1px 6px #000; display: none; }
+  #toast { position: fixed; left: 50%; top: 22px; transform: translate(-50%, -12px); z-index: 25; padding: 9px 16px; border-radius: 999px;
+    background: var(--panel); border: 1px solid var(--line); opacity: 0; transition: opacity .3s, transform .3s; pointer-events: none; font-size: 14px; }
+  #toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  #menu { position: fixed; right: 16px; top: 60px; z-index: 22; width: min(400px, calc(100vw - 32px)); max-height: calc(100vh - 80px); overflow: auto;
+    padding: 10px; border-radius: 16px; background: var(--panel); border: 1px solid var(--line); backdrop-filter: blur(10px); }
+  #menu h2 { margin: 4px 8px 8px; font-size: 13px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--dim); }
+  .mrow { display: flex; justify-content: space-between; align-items: center; padding: 9px 10px; border-radius: 10px; cursor: pointer; gap: 10px; }
+  .mrow.sel { background: rgba(185,140,255,.18); box-shadow: inset 0 0 0 1px rgba(185,140,255,.45); }
+  .mv { display: flex; align-items: center; gap: 6px; color: var(--dim); }
+  .mrow.sel .mv { color: var(--fg); }
+  .arr { font-size: 18px; padding: 0 6px; cursor: pointer; opacity: .7; }
+  .mfoot { color: var(--dim); font-size: 11.5px; margin: 8px 8px 2px; }
+
+  #help { position: fixed; inset: 0; z-index: 23; display: grid; place-items: center; background: rgba(0,0,0,.55); }
+  #help .card { width: min(720px, calc(100vw - 32px)); max-height: calc(100vh - 40px); overflow: auto; }
+  #help table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  #help td { padding: 5px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  #help td:first-child { color: var(--acc2); white-space: nowrap; width: 38%; }
+  #help h3 { margin: 16px 0 6px; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: var(--dim); }
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+
+<div id="hud">
+  <div id="stats"></div>
+  <div id="titleBox"><div id="title"></div><div id="subtitle"></div></div>
+  <div id="topbar">
+    <span class="pill" id="padState"></span>
+    <span class="pill" id="srcState"></span>
+    <button class="ibtn" id="fsBtn" title="Fullscreen (G)">&#x26F6;</button>
+    <button class="ibtn" id="menuBtn" title="Menu (Esc / Options)">&#9776;</button>
+  </div>
+  <div id="meters"><i></i><i></i><i></i><i></i><i></i><span id="beatDot"></span></div>
+</div>
+
+<div id="toast"></div>
+<div id="loading"></div>
+
+<div id="menu" class="hidden">
+  <h2>Settings</h2>
+  <div id="menuList"></div>
+  <div class="mfoot">D-pad / arrows to choose &middot; &#x2715; / Enter to change &middot; &#x25EF; / Esc to close</div>
+</div>
+
+<div id="start">
+  <div class="card">
+    <h1>Fractal Drift</h1>
+    <p class="tag">Infinite 3D fractals that dance to your music.</p>
+    <button class="btn primary" id="btnSystem"><span class="ico">&#127925;</span><span><b>Listen to Spotify (system audio)</b>
+      <small>Pick <b>Entire screen</b> and switch on <b>"Also share system audio"</b>. Works with the Spotify app or web player.</small></span></button>
+    <button class="btn" id="btnInput"><span class="ico">&#127908;</span><span><b>Microphone / line-in</b><small>Use a mic, Stereo Mix or a virtual audio cable.</small></span></button>
+    <button class="btn" id="btnDemo"><span class="ico">&#129345;</span><span><b>Demo beat</b><small>Built-in techno loop to try it out.</small></span></button>
+    <button class="btn" id="btnNone"><span class="ico">&#10024;</span><span><b>Just explore</b><small>No audio, pure fractal flight.</small></span></button>
+    <div id="startErr"></div>
+    <div class="hint">PS5 controller: connect by USB or Bluetooth, then press any button. <kbd>Esc</kbd>/Options opens settings, <kbd>G</kbd> fullscreen.</div>
+  </div>
+</div>
+
+<div id="help" class="hidden" onclick="this.classList.add('hidden')">
+  <div class="card">
+    <h1 style="font-size:22px">Controls</h1>
+    <h3>PS5 DualSense</h3>
+    <table>
+      <tr><td>Left stick</td><td>Up/down is the throttle (centred you drift on gently, back brakes). Left/right <b>rolls</b> &ndash; a fractal has no up, so the horizon stays where you put it</td></tr>
+      <tr><td>Right stick</td><td>Steer - you go where you point. The craft leans into the turn and the horizon rolls back level on its own</td></tr>
+      <tr><td>R2 / L2</td><td>Boost / brake (analog). Speed also scales with distance to the surface, so you can dive forever</td></tr>
+      <tr><td>L1 / R1</td><td>Previous / next tab: Fractals &middot; Tunnel &middot; Canyon &middot; Nebula &middot; Songform</td></tr>
+      <tr><td>D-pad &larr; &rarr;</td><td>Previous / next fractal</td></tr>
+      <tr><td>D-pad &uarr; &darr;</td><td>Morph the fractal's shape</td></tr>
+      <tr><td>&#x2715; Cross</td><td>Autopilot on/off (sticks still steer)</td></tr>
+      <tr><td>&#x25A1; Square</td><td>Cycle colour palette</td></tr>
+      <tr><td>&#x25B3; Triangle</td><td>Hide/show HUD</td></tr>
+      <tr><td>&#x25EF; Circle</td><td>Reset view</td></tr>
+      <tr><td>Touchpad click</td><td>Cycle audio reactivity</td></tr>
+      <tr><td>Rumble</td><td>The controller rumbles with the bass. Strength is in Settings (changing it buzzes so you can feel the level). For Bluetooth, click <b>Settings &rsaquo; Direct haptics</b> once</td></tr>
+      <tr><td>L3</td><td>Photo mode (max detail; hold still to refine)</td></tr>
+      <tr><td>R3</td><td>Level the horizon</td></tr>
+      <tr><td>Create</td><td>Screenshot (saved to Downloads)</td></tr>
+      <tr><td>Options</td><td>Settings menu</td></tr>
+    </table>
+    <h3>Keyboard / mouse / touch</h3>
+    <table>
+      <tr><td>W / S, A / D</td><td>Throttle, roll</td></tr>
+      <tr><td>Q / E, Space / C</td><td>Slide sideways, climb / dive</td></tr>
+      <tr><td>Mouse drag / arrows</td><td>Look</td></tr>
+      <tr><td>, / .</td><td>Previous / next tab (Fractals, Tunnel, Canyon, Nebula, Songform)</td></tr>
+      <tr><td>Shift / Ctrl</td><td>Boost / precision</td></tr>
+      <tr><td>N / B or 1&ndash;9</td><td>Next / previous / pick fractal</td></tr>
+      <tr><td>R / F</td><td>Morph shape</td></tr>
+      <tr><td>P, O, H, V, X, L, K</td><td>Autopilot, palette, HUD, reactivity, photo mode, level, screenshot</td></tr>
+      <tr><td>Wheel</td><td>Flight speed</td></tr>
+      <tr><td>G, Esc</td><td>Fullscreen, settings</td></tr>
+      <tr><td>Touch</td><td>Drag to steer, pinch for the throttle</td></tr>
+      <tr><td>Settings &rsaquo; Flight model</td><td><b>Drift</b> (default) is calm and goes where you point; <b>Glide</b> flies like an aircraft, banking into its turns; <b>Free cam</b> is the old spectator camera</td></tr>
+    </table>
+    <p class="hint">Tap anywhere to close.</p>
+  </div>
+</div>
+
+<script src="js/core.js"></script>
+<script src="js/shaders.js"></script>
+<script src="js/fractals.js"></script>
+<script src="js/tabs.js"></script>
+<script src="js/renderer.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/input.js"></script>
+<script src="js/flight.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
